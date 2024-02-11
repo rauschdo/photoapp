@@ -37,6 +37,8 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
 
         with(binding) {
             // MARK: - GALLERY BUTTON
+
+            // TODO update to photo picker contract
             galleryButt.setOnClickListener {
                 if (!mmp.checkPermissionForReadExternalStorage()) {
                     mmp.requestPermissionForReadExternalStorage()
@@ -63,17 +65,20 @@ class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
     var GALLERY = 1
 
     // OPEN CAMERA
+    // TODO migrate to CameraX Photo capture
     private fun openCamera() {
-        //Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        //startActivityForResult(intent, CAMERA);
-        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        val file = File(
-            Environment.getExternalStorageDirectory(),
-            "MyPhoto.jpg"
-        )
-        outPutfileUri = Uri.fromFile(file)
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutfileUri)
-        startActivityForResult(intent, CAMERA)
+        try {
+            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val file = File(
+                Environment.getExternalStorageDirectory(),
+                "MyPhoto.jpg"
+            )
+            outPutfileUri = Uri.fromFile(file)
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutfileUri)
+            startActivityForResult(intent, CAMERA)
+        } catch (e: Exception) {
+            Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
+        }
     }
 
     // OPEN GALLERY
