@@ -17,6 +17,9 @@ and a capture text before saving it to external storage.
 
 ## Plans
 
+Even though this project could be setup fresh with compose directly, intention is here to go step by step and modernize along the way.
+Therefore checkboxes below do not represent a order in any way
+
 - [ ] (update make project runnable under modern versions of the IDE)
 - [ ] (turn project from View based to Compose system)
 - [ ] (update camera implementations to using CameraX)
