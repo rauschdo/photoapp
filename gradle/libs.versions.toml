@@ -8,10 +8,13 @@ constraint = "2.1.4"
 # coil = "2.4.0"
 composeCompiler = "1.5.9"
 composeBOM = "2024.02.00"
+activity = "1.9.0-alpha03"
 lifecycle = "2.7.0"
 navigation = "2.7.7"
 daggerHilt = "2.50"
 hilt = "1.1.0"
+timber = "5.0.1"
+gson = "2.10.1"
 junit = "4.13.2"
 junit-test-ext = "1.1.5"
 espresso = "3.5.1"
@@ -29,9 +32,13 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 # https://developer.android.com/jetpack/compose/setup#setup-compose
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBOM" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-compose-ui-graphics-android = { group = "androidx.compose.ui", name = "ui-graphics-android" }
 androidx-compose-ui-util = { group = "androidx.compose.ui", name = "ui-util" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity" }
 androidx-lifecycle-runtimeKtx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-lifecycle-runtimeCompose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewModelCompose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycle" }
@@ -40,6 +47,8 @@ androidx-hilt-navigation = { group = "androidx.hilt", name = "hilt-navigation-co
 dagger-hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "daggerHilt" }
 dagger-hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "daggerHilt" }
 dagger-hilt-compiler = { group = "com.google.dagger", name = "hilt-compiler", version.ref = "daggerHilt" }
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-test-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junit-test-ext" }
 androidx-test-espresso = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso" }

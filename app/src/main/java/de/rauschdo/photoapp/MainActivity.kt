@@ -1,169 +1,72 @@
 package de.rauschdo.photoapp
 
-import android.content.Intent
-import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.provider.MediaStore
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat.OnRequestPermissionsResultCallback
-import de.rauschdo.photoapp.databinding.ActivityMainBinding
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.IOException
+import androidx.activity.BackEventCompat
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.PredictiveBackHandler
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import dagger.hilt.android.AndroidEntryPoint
+import de.rauschdo.photoapp.ui.main.LocalAppNav
+import de.rauschdo.photoapp.ui.main.MainAppState
+import de.rauschdo.photoapp.ui.main.rememberMainAppState
+import de.rauschdo.photoapp.ui.navigation.MainNavHost
+import de.rauschdo.photoapp.ui.theme.PhotoappTheme
+import de.rauschdo.photoapp.utility.BitmapController
+import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
+import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
-class MainActivity : AppCompatActivity(), OnRequestPermissionsResultCallback {
+@AndroidEntryPoint
+class MainActivity : ComponentActivity() {
 
-    private lateinit var binding: ActivityMainBinding
-
-    /* Variables */
-    var mmp = MarshMallowPermission(this)
+    @Inject
+    lateinit var bitmapController: BitmapController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        ActivityMainBinding.inflate(layoutInflater).also {
-            binding = it
-            setContentView(binding.root)
-        }
+        enableEdgeToEdge()
 
-        // Lock to Portrait orientation
-        //super.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-        // Hide ActionBar
-        supportActionBar?.hide()
-
-        with(binding) {
-            // MARK: - GALLERY BUTTON
-
-            // TODO update to photo picker contract
-            galleryButt.setOnClickListener {
-                if (!mmp.checkPermissionForReadExternalStorage()) {
-                    mmp.requestPermissionForReadExternalStorage()
-                } else {
-                    openGallery()
-                }
-            }
-
-            // MARK: - CAMERA BUTTON
-            camButt.setOnClickListener {
-                if (!mmp.checkPermissionForCamera()) {
-                    mmp.requestPermissionForCamera()
-                } else {
-                    openCamera()
-                }
+        setContent {
+            PhotoappTheme {
+                MainApp()
             }
         }
-    } // end onCreate()
+    }
+}
 
-    var outPutfileUri: Uri? = null
+@Composable
+fun MainApp(appState: MainAppState = rememberMainAppState()) {
+    val coroutineScope = rememberCoroutineScope()
 
-    // IMAGE HANDLING METHODS ------------------------------------------------------------------------
-    var CAMERA = 0
-    var GALLERY = 1
-
-    // OPEN CAMERA
-    // TODO migrate to CameraX Photo capture
-    private fun openCamera() {
+    PredictiveBackHandler { progress: Flow<BackEventCompat> ->
         try {
-            val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-            val file = File(
-                Environment.getExternalStorageDirectory(),
-                "MyPhoto.jpg"
+            progress.collect { backevent ->
+                Timber.tag("back").i(backevent.toString())
+            }
+            //completion
+            if (!appState.navigator.onBackClick()) {
+                // TODO app exit dialog or snackbar
+            }
+        } catch (e: CancellationException) {
+            // nothing
+        }
+    }
+
+    CompositionLocalProvider(LocalAppNav provides appState.navigator) {
+        Scaffold {
+            MainNavHost(
+                modifier = Modifier.padding(it),
+                navigator = appState.navigator,
             )
-            outPutfileUri = Uri.fromFile(file)
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, outPutfileUri)
-            startActivityForResult(intent, CAMERA)
-        } catch (e: Exception) {
-            Toast.makeText(this, e.message, Toast.LENGTH_LONG).show()
         }
     }
-
-    // OPEN GALLERY
-    private fun openGallery() {
-        val intent = Intent()
-        intent.setType("image/*")
-        intent.setAction(Intent.ACTION_GET_CONTENT)
-        startActivityForResult(Intent.createChooser(intent, "Select Image"), GALLERY)
-    }
-
-    // IMAGE PICKED DELEGATE
-    public override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
-            var bm: Bitmap? = null
-
-            // Camera
-            if (requestCode == CAMERA) {
-                val uri = outPutfileUri.toString()
-                try {
-                    bm = MediaStore.Images.Media.getBitmap(this.contentResolver, outPutfileUri)
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-
-
-                // Gallery
-            } else if (requestCode == GALLERY) {
-                try {
-                    bm = MediaStore.Images.Media.getBitmap(
-                        applicationContext.contentResolver,
-                        data?.data
-                    )
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-            }
-
-            // Call method to pass image to Other Activity
-            bm?.let {
-                val scaledBitmap = scaleBitmapToMaxSize(800, bm)
-                passBitmapToOtherActivity(scaledBitmap)
-            } ?: Toast.makeText(this, "Couln't load image to continue", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    //END  IMAGE HANDLING METHODS -------------------------------------------------------------------------------------
-    private fun passBitmapToOtherActivity(bitmap: Bitmap): String? {
-
-        // Save Bitmap into the Device (to pass it to the other Activity)
-        var fileName: String? = "imagePassed"
-        try {
-            val bytes = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes)
-            val fo = openFileOutput(fileName, MODE_PRIVATE)
-            fo.write(bytes.toByteArray())
-            fo.close()
-
-            // Go to CreateMeme
-            val i = Intent(this@MainActivity, ImageEditor::class.java)
-            startActivity(i)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            fileName = null
-        }
-        return fileName
-    }
-
-    companion object {
-        fun scaleBitmapToMaxSize(
-            maxSize: Int,
-            bm: Bitmap
-        ): Bitmap {
-            val outWidth: Int
-            val outHeight: Int
-            val inWidth = bm.width
-            val inHeight = bm.height
-            if (inWidth > inHeight) {
-                outWidth = maxSize
-                outHeight = inHeight * maxSize / inWidth
-            } else {
-                outHeight = maxSize
-                outWidth = inWidth * maxSize / inHeight
-            }
-            return Bitmap.createScaledBitmap(bm, outWidth, outHeight, false)
-        }
-    }
-} //@end
+}
