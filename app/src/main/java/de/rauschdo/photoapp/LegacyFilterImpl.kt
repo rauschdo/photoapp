@@ -12,7 +12,10 @@ import android.graphics.Shader
 import android.widget.ImageView
 import java.util.Random
 
-object Filters {
+/**
+ * Filter Implementation from original Project
+ */
+object LegacyFilterImpl {
 
     // INVERT EFFECT
     @JvmStatic

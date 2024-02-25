@@ -50,6 +50,10 @@ dependencies {
 
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.camerax.camera2)
+    implementation(libs.androidx.camerax.camera.lifecycle)
+    implementation(libs.androidx.camerax.camera.view)
+    implementation(libs.coil.compose)
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)

@@ -22,11 +22,11 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import de.rauschdo.photoapp.Filters.brightnessEffect
-import de.rauschdo.photoapp.Filters.contrastEffect
-import de.rauschdo.photoapp.Filters.grayscaleEffect
-import de.rauschdo.photoapp.Filters.invertEffect
-import de.rauschdo.photoapp.Filters.sepiaEffect
+import de.rauschdo.photoapp.LegacyFilterImpl.brightnessEffect
+import de.rauschdo.photoapp.LegacyFilterImpl.contrastEffect
+import de.rauschdo.photoapp.LegacyFilterImpl.grayscaleEffect
+import de.rauschdo.photoapp.LegacyFilterImpl.invertEffect
+import de.rauschdo.photoapp.LegacyFilterImpl.sepiaEffect
 import de.rauschdo.photoapp.databinding.ActivityImageEditorBinding
 import java.io.File
 import java.io.FileNotFoundException

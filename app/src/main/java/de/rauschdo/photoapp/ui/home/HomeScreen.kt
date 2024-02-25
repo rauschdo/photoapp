@@ -45,7 +45,7 @@ fun HomeDestination(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         uri?.let {
-            // TODO post in bitmap controller and navigate
+            viewModel.setAction(HomeContract.Action.OnImagePicked(uri))
         } ?: Timber.i("No Media selected.")
     }
 

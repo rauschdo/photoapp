@@ -8,12 +8,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import androidx.annotation.StringRes
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import javax.inject.Inject
@@ -23,62 +20,69 @@ import javax.inject.Singleton
 class BitmapController @Inject constructor(
     @ApplicationContext val context: Context
 ) {
-    suspend fun saveEditorImage(filename: String, bitmap: Bitmap): Result<Unit> = withContext(Dispatchers.IO) {
+    val captureHolder: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
 
-        val resolver: ContentResolver = context.applicationContext.contentResolver
+    suspend fun saveEditorImage(filename: String, bitmap: Bitmap): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            val resolver: ContentResolver = context.applicationContext.contentResolver
 
-        val imageCollection: Uri = when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> MediaStore.Images.Media.getContentUri(
-                MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            else -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        }
+            val imageCollection: Uri = when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q -> MediaStore.Images.Media.getContentUri(
+                    MediaStore.VOLUME_EXTERNAL_PRIMARY
+                )
 
-        // Publish a new image.
-        val nowTimestamp: Long = System.currentTimeMillis()
-        val imageContentValues: ContentValues = ContentValues().apply {
-
-            put(MediaStore.Images.Media.DISPLAY_NAME, "$filename.jpg")
-            put(MediaStore.Images.Media.MIME_TYPE, "image/jpg")
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.MediaColumns.DATE_TAKEN, nowTimestamp)
-                put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DCIM + "/${context.applicationContext.packageName}")
-                put(MediaStore.MediaColumns.IS_PENDING, 1)
+                else -> MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                put(MediaStore.Images.Media.DATE_TAKEN, nowTimestamp)
-                put(MediaStore.Images.Media.DATE_ADDED, nowTimestamp)
-                put(MediaStore.Images.Media.DATE_MODIFIED, nowTimestamp)
-            }
-        }
+            // Publish a new image.
+            val nowTimestamp: Long = System.currentTimeMillis()
+            val imageContentValues: ContentValues = ContentValues().apply {
 
-        val imageMediaStoreUri: Uri? = resolver.insert(imageCollection, imageContentValues)
-
-        // Write the image data to the new Uri.
-        val result: Result<Unit> = imageMediaStoreUri?.let { uri ->
-            kotlin.runCatching {
-                resolver.openOutputStream(uri).use { outputStream: OutputStream? ->
-                    checkNotNull(outputStream) { "Couldn't create file for gallery, MediaStore output stream is null" }
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
-                }
+                put(MediaStore.Images.Media.DISPLAY_NAME, "$filename.jpg")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpg")
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    imageContentValues.clear()
-                    imageContentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                    resolver.update(uri, imageContentValues, null, null)
+                    put(MediaStore.MediaColumns.DATE_TAKEN, nowTimestamp)
+                    put(
+                        MediaStore.MediaColumns.RELATIVE_PATH,
+                        Environment.DIRECTORY_DCIM + "/${context.applicationContext.packageName}"
+                    )
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
 
-                Result.success(Unit)
-            }.getOrElse { exception: Throwable ->
-                exception.message?.let(::println)
-                resolver.delete(uri, null, null)
-                Result.failure(exception)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    put(MediaStore.Images.Media.DATE_TAKEN, nowTimestamp)
+                    put(MediaStore.Images.Media.DATE_ADDED, nowTimestamp)
+                    put(MediaStore.Images.Media.DATE_MODIFIED, nowTimestamp)
+                }
             }
-        } ?: run {
-            Result.failure(Exception("Couldn't create file for gallery"))
-        }
 
-        return@withContext result
-    }
+            val imageMediaStoreUri: Uri? = resolver.insert(imageCollection, imageContentValues)
+
+            // Write the image data to the new Uri.
+            val result: Result<Unit> = imageMediaStoreUri?.let { uri ->
+                kotlin.runCatching {
+                    resolver.openOutputStream(uri).use { outputStream: OutputStream? ->
+                        checkNotNull(outputStream) { "Couldn't create file for gallery, MediaStore output stream is null" }
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+                    }
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        imageContentValues.clear()
+                        imageContentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        resolver.update(uri, imageContentValues, null, null)
+                    }
+
+                    Result.success(Unit)
+                }.getOrElse { exception: Throwable ->
+                    exception.message?.let(::println)
+                    resolver.delete(uri, null, null)
+                    Result.failure(exception)
+                }
+            } ?: run {
+                Result.failure(Exception("Couldn't create file for gallery"))
+            }
+
+            return@withContext result
+        }
 }
